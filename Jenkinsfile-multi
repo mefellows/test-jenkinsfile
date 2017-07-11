@@ -1,0 +1,60 @@
+#!/usr/bin/env groovy
+
+/*
+ * Bootstrap will create Jenkins folders and jobs
+ */
+
+pipeline {
+
+  agent any
+
+  /* by default disable project jobs as they will spawn many builds if active */
+  parameters {
+    booleanParam(name: 'CREATE_PROJECTS', defaultValue: true, description: 'Setup jobs folder and run jobs')
+  }
+
+  environment {
+    projects = []
+  }
+
+  options {
+    disableConcurrentBuilds()
+    timestamps()
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+  }
+
+  stages {
+
+    stage('load lists from yaml files') {
+      steps {
+        echo 'load lists from yaml files'
+        script {
+          projects = readYaml(file: 'projects.yaml')
+        }
+      }
+    }
+
+    stage('create projects jobs') {
+      steps {
+        echo 'create projects folder'
+        script {
+          jobDsl scriptText:
+          """
+          folder('projects') {
+            description 'projects multibranch pipeline jobs'
+          }
+          """
+          if ("${CREATE_PROJECTS}" == "true") {
+            for ( project in projects.projects ) {
+              env.project = project
+              echo "create projects multibranch pipeline job: ${env.project}"
+              load('jobs/project_multibranch_pipeline.dsl')
+            }
+          } else {
+            echo 'skipping projects folder ...'
+          }
+        }
+      }
+    }
+  }
+}
