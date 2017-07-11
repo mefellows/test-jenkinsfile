@@ -13,9 +13,9 @@ pipeline {
     booleanParam(name: 'CREATE_PROJECTS', defaultValue: true, description: 'Setup jobs folder and run jobs')
   }
 
-  environment {
-    projects = []
-  }
+  // environment {
+  //   projects = []
+  // }
 
   options {
     disableConcurrentBuilds()
